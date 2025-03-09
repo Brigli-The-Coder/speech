@@ -119,7 +119,7 @@
             });
         }
 
-        // Trigger the voice loading
+        // Check if voices are loaded, otherwise retry
         if (speechSynthesis.onvoiceschanged !== undefined) {
             speechSynthesis.onvoiceschanged = loadVoices;
         } else {
