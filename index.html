@@ -10,43 +10,54 @@
 
     <style>
         .gradient-background {
-  background: linear-gradient(82deg,#4f08a5,#fc6947,#853c03,#76d09f,#a9a78c);
-  background-size: 300% 300%;
-  animation: gradient-animation 15s ease infinite;
-}
+            background: linear-gradient(82deg,#4f08a5,#fc6947,#853c03,#76d09f,#a9a78c);
+            background-size: 300% 300%;
+            animation: gradient-animation 15s ease infinite;
+        }
 
-@keyframes gradient-animation {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
-}
+        @keyframes gradient-animation {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+        }
+
         .container {
             max-width: 800px;
             margin-top: 50px;
         }
+
         .form-label {
             font-weight: bold;
         }
+
         .form-control, .form-select {
             border-radius: 10px;
         }
+
         .btn-primary {
             background-color: #007bff;
             border-color: #007bff;
         }
+
         .btn-primary:hover {
             background-color: #0056b3;
             border-color: #0056b3;
         }
+
         .range-label {
             font-weight: bold;
         }
+
         .range-input {
             width: 100%;
         }
@@ -94,6 +105,11 @@
             voices = speechSynthesis.getVoices();
             const voiceSelect = document.getElementById('voiceSelect');
             voiceSelect.innerHTML = ''; // Clear the dropdown
+
+            if (voices.length === 0) {
+                setTimeout(loadVoices, 100); // Retry loading voices if none are found
+                return;
+            }
 
             voices.forEach((voice, index) => {
                 const option = document.createElement('option');
