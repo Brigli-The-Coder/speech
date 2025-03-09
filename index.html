@@ -119,6 +119,13 @@
             });
         }
 
+        // Trigger the voice loading after an interaction (important for mobile devices)
+        document.addEventListener("DOMContentLoaded", () => {
+            // Ensure voices are loaded after the user interaction
+            document.getElementById('textToSpeak').focus();
+            loadVoices(); // Explicitly load voices
+        });
+
         // Check if voices are loaded, otherwise retry
         if (speechSynthesis.onvoiceschanged !== undefined) {
             speechSynthesis.onvoiceschanged = loadVoices;
