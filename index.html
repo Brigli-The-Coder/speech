@@ -96,21 +96,110 @@
         </div>
     </div>
 
-<!--     <script type="application/ld+json">
-    {
-        "@context": "https://schema.org",
-        "@type": "SoftwareApplication",
-        "name": "Text-to-Speech App",
-        "url": "https://brigli-the-coder.github.io/speech/",
-        "operatingSystem": "Web",
-        "applicationCategory": "Utility",
-        "creator": {
-            "@type": "Person",
-            "name": "Brigli The Coder"
-        }
-    }
-    </script> -->
+    <script>
+        let voices = [];
+        let speakingTimeout;
 
+        // Load voices and populate the select menu
+        function loadVoices() {
+            voices = speechSynthesis.getVoices();
+            const voiceSelect = document.getElementById('voiceSelect');
+            voiceSelect.innerHTML = ''; // Clear the dropdown
+
+            if (voices.length === 0) {
+                setTimeout(loadVoices, 100); // Retry loading voices if none are found
+                return;
+            }
+
+            voices.forEach((voice, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = ${voice.name} (${voice.lang});
+                voiceSelect.appendChild(option);
+            });
+        }
+
+        // Trigger the voice loading after an interaction (important for mobile devices)
+        document.addEventListener("DOMContentLoaded", () => {
+            // Ensure voices are loaded after the user interaction
+            document.getElementById('textToSpeak').focus();
+            loadVoices(); // Explicitly load voices
+        });
+
+        // Check if voices are loaded, otherwise retry
+        if (speechSynthesis.onvoiceschanged !== undefined) {
+            speechSynthesis.onvoiceschanged = loadVoices;
+        } else {
+            loadVoices(); // If voices are already available
+        }
+
+        // Split the text into manageable chunks
+        function splitTextIntoChunks(text, maxLength = 100) {
+            const sentences = text.split(/(?<=\.)\s+/); // Split by sentence (simplified)
+            let chunks = [];
+            let currentChunk = "";
+
+            sentences.forEach(sentence => {
+                if (currentChunk.length + sentence.length > maxLength) {
+                    chunks.push(currentChunk);
+                    currentChunk = sentence; // Start a new chunk
+                } else {
+                    currentChunk += (currentChunk ? " " : "") + sentence; // Add to the current chunk
+                }
+            });
+
+            if (currentChunk.length > 0) {
+                chunks.push(currentChunk); // Add the last chunk
+            }
+
+            return chunks;
+        }
+
+        // Speak the text with selected voice and settings
+        function speakText() {
+            const text = document.getElementById("textToSpeak").value;
+            const selectedVoiceIndex = document.getElementById("voiceSelect").value;
+            const pitch = document.getElementById("pitchRange").value;
+            const rate = document.getElementById("rateRange").value;
+
+            if (text !== "") {
+                const chunks = splitTextIntoChunks(text); // Split the text into smaller chunks
+
+                // Create a function to speak chunks one by one
+                function speakChunks(chunks) {
+                    if (chunks.length === 0) return;
+
+                    const chunk = chunks.shift(); // Get the next chunk
+                    const speech = new SpeechSynthesisUtterance(chunk);
+                    speech.voice = voices[selectedVoiceIndex];
+                    speech.pitch = pitch; // Custom pitch
+                    speech.rate = rate; // Custom rate
+                    speech.lang = voices[selectedVoiceIndex].lang; // Use the selected voice's language
+
+                    // Speak the current chunk
+                    speechSynthesis.speak(speech);
+
+                    // Call this function again once the current chunk finishes
+                    speech.onend = () => speakChunks(chunks);
+                }
+
+                // Start speaking chunks
+                speakChunks(chunks);
+
+                // Set a timeout to stop the speaking after 3 minutes (180 seconds)
+                clearTimeout(speakingTimeout); // Clear any previous timeout
+                speakingTimeout = setTimeout(() => {
+                    console.log("Stopping speech after 3 minutes.");
+                    window.speechSynthesis.cancel(); // Stop the speech after 3 minutes
+                    alert("Speech session has ended (3 minutes).");
+                }, 180000); // 180000 ms = 3 minutes
+            } else {
+                alert("Please enter some text to speak!");
+            }
+        }
+    </script>
+
+    <!-- Bootstrap 5 JS (for responsiveness) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
