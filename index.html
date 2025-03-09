@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text-to-Speech with Custom Voices</title>
+
+    <!-- Bootstrap 5 CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            background-color: aquamarine;
+            font-family: 'Arial', sans-serif;
+        }
+        .container {
+            max-width: 800px;
+            margin-top: 50px;
+        }
+        .form-label {
+            font-weight: bold;
+        }
+        .form-control, .form-select {
+            border-radius: 10px;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+            border-color: #0056b3;
+        }
+        .range-label {
+            font-weight: bold;
+        }
+        .range-input {
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1 class="text-center mb-4">Text-to-Speech with Custom Voices</h1>
+        <p style="text-align: center; font-size: 25px;">Made with ❤️ by <a href="https://brigli-the-coder.com" style="text-decoration: none; font-size: 25px;" target="_blank" >Brigli The Coder</a></p>
+
+        <div class="mb-3">
+            <label for="textToSpeak" class="form-label">Enter Text</label>
+            <textarea id="textToSpeak" class="form-control" rows="5" placeholder="Type something here..."></textarea>
+        </div>
+
+        <div class="mb-3">
+            <label for="voiceSelect" class="form-label">Choose a Voice</label>
+            <select id="voiceSelect" class="form-select">
+                <!-- Dynamically populated voices will be added here -->
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label for="pitchRange" class="form-label range-label">Pitch</label>
+            <input type="range" id="pitchRange" class="form-range range-input" min="0" max="2" step="0.1" value="1">
+        </div>
+
+        <div class="mb-3">
+            <label for="rateRange" class="form-label range-label">Rate</label>
+            <input type="range" id="rateRange" class="form-range range-input" min="0.1" max="2" step="0.1" value="1">
+        </div>
+
+        <div class="text-center">
+            <button onclick="speakText()" class="btn btn-outline-primary w-100">Speak</button>
+        </div>
+    </div>
+
+    <script>
+        let voices = [];
+        let speakingTimeout;
+
+        // Load voices and populate the select menu
+        function loadVoices() {
+            voices = speechSynthesis.getVoices();
+            const voiceSelect = document.getElementById('voiceSelect');
+            voiceSelect.innerHTML = ''; // Clear the dropdown
+
+            voices.forEach((voice, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = `${voice.name} (${voice.lang})`;
+                voiceSelect.appendChild(option);
+            });
+        }
+
+        // Trigger the voice loading
+        if (speechSynthesis.onvoiceschanged !== undefined) {
+            speechSynthesis.onvoiceschanged = loadVoices;
+        } else {
+            loadVoices(); // If voices are already available
+        }
+
+        // Split the text into manageable chunks
+        function splitTextIntoChunks(text, maxLength = 100) {
+            const sentences = text.split(/(?<=\.)\s+/); // Split by sentence (simplified)
+            let chunks = [];
+            let currentChunk = "";
+
+            sentences.forEach(sentence => {
+                if (currentChunk.length + sentence.length > maxLength) {
+                    chunks.push(currentChunk);
+                    currentChunk = sentence; // Start a new chunk
+                } else {
+                    currentChunk += (currentChunk ? " " : "") + sentence; // Add to the current chunk
+                }
+            });
+
+            if (currentChunk.length > 0) {
+                chunks.push(currentChunk); // Add the last chunk
+            }
+
+            return chunks;
+        }
+
+        // Speak the text with selected voice and settings
+        function speakText() {
+            const text = document.getElementById("textToSpeak").value;
+            const selectedVoiceIndex = document.getElementById("voiceSelect").value;
+            const pitch = document.getElementById("pitchRange").value;
+            const rate = document.getElementById("rateRange").value;
+
+            if (text !== "") {
+                const chunks = splitTextIntoChunks(text); // Split the text into smaller chunks
+
+                // Create a function to speak chunks one by one
+                function speakChunks(chunks) {
+                    if (chunks.length === 0) return;
+
+                    const chunk = chunks.shift(); // Get the next chunk
+                    const speech = new SpeechSynthesisUtterance(chunk);
+                    speech.voice = voices[selectedVoiceIndex];
+                    speech.pitch = pitch; // Custom pitch
+                    speech.rate = rate; // Custom rate
+                    speech.lang = voices[selectedVoiceIndex].lang; // Use the selected voice's language
+
+                    // Speak the current chunk
+                    speechSynthesis.speak(speech);
+
+                    // Call this function again once the current chunk finishes
+                    speech.onend = () => speakChunks(chunks);
+                }
+
+                // Start speaking chunks
+                speakChunks(chunks);
+
+                // Set a timeout to stop the speaking after 3 minutes (180 seconds)
+                clearTimeout(speakingTimeout); // Clear any previous timeout
+                speakingTimeout = setTimeout(() => {
+                    console.log("Stopping speech after 3 minutes.");
+                    window.speechSynthesis.cancel(); // Stop the speech after 3 minutes
+                    alert("Speech session has ended (3 minutes).");
+                }, 180000); // 180000 ms = 3 minutes
+            } else {
+                alert("Please enter some text to speak!");
+            }
+        }
+    </script>
+
+    <!-- Bootstrap 5 JS (for responsiveness) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
