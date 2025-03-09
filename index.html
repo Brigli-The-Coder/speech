@@ -9,10 +9,23 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
 
     <style>
-        body {
-            background-color: aquamarine;
-            font-family: 'Arial', sans-serif;
-        }
+        .gradient-background {
+  background: linear-gradient(82deg,#4f08a5,#fc6947,#853c03,#76d09f,#a9a78c);
+  background-size: 300% 300%;
+  animation: gradient-animation 15s ease infinite;
+}
+
+@keyframes gradient-animation {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
         .container {
             max-width: 800px;
             margin-top: 50px;
@@ -39,7 +52,7 @@
         }
     </style>
 </head>
-<body>
+<body class="gradient-background">
 
     <div class="container">
         <h1 class="text-center mb-4">Text-to-Speech with Custom Voices</h1>
