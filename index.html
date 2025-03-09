@@ -16,58 +16,28 @@
         }
 
         @keyframes gradient-animation {
-            0% {
-                background-position: 0% 50%;
-            }
-            50% {
-                background-position: 100% 50%;
-            }
-            100% {
-                background-position: 0% 50%;
-            }
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
 
-        body {
-            font-family: 'Arial', sans-serif;
-        }
-
-        .container {
-            max-width: 800px;
-            margin-top: 50px;
-        }
-
-        .form-label {
-            font-weight: bold;
-        }
-
-        .form-control, .form-select {
-            border-radius: 10px;
-        }
-
-        .btn-primary {
-            background-color: #007bff;
-            border-color: #007bff;
-        }
-
-        .btn-primary:hover {
-            background-color: #0056b3;
-            border-color: #0056b3;
-        }
-
-        .range-label {
-            font-weight: bold;
-        }
-
-        .range-input {
-            width: 100%;
-        }
+        body { font-family: 'Arial', sans-serif; }
+        .container { max-width: 800px; margin-top: 50px; }
+        .form-label { font-weight: bold; }
+        .form-control, .form-select { border-radius: 10px; }
+        .btn-primary { background-color: #007bff; border-color: #007bff; }
+        .btn-primary:hover { background-color: #0056b3; border-color: #0056b3; }
+        .range-label { font-weight: bold; }
+        .range-input { width: 100%; }
     </style>
 </head>
 <body class="gradient-background">
 
     <div class="container">
         <h1 class="text-center mb-4">Text-to-Speech with Custom Voices</h1>
-        <p style="text-align: center; font-size: 25px;">Made with ❤️ by <a href="https://brigli-the-coder.com" style="text-decoration: none; font-size: 25px;" target="_blank" >Brigli The Coder</a></p>
+        <p style="text-align: center; font-size: 25px;">
+            Made with ❤️ by <a href="https://brigli-the-coder.com" style="text-decoration: none; font-size: 25px;" target="_blank">Brigli The Coder</a>
+        </p>
 
         <div class="mb-3">
             <label for="textToSpeak" class="form-label">Enter Text</label>
@@ -77,7 +47,7 @@
         <div class="mb-3">
             <label for="voiceSelect" class="form-label">Choose a Voice</label>
             <select id="voiceSelect" class="form-select">
-                <!-- Dynamically populated voices will be added here -->
+                <!-- Voices will be dynamically added here -->
             </select>
         </div>
 
@@ -98,108 +68,110 @@
 
     <script>
         let voices = [];
-        let speakingTimeout;
 
-        // Load voices and populate the select menu
+        // Load voices and populate the dropdown
         function loadVoices() {
             voices = speechSynthesis.getVoices();
             const voiceSelect = document.getElementById('voiceSelect');
-            voiceSelect.innerHTML = ''; // Clear the dropdown
+            
+            if (!voiceSelect) return;
+
+            voiceSelect.innerHTML = '';
 
             if (voices.length === 0) {
-                setTimeout(loadVoices, 100); // Retry loading voices if none are found
+                setTimeout(loadVoices, 100); // Retry if voices aren't loaded
                 return;
             }
 
             voices.forEach((voice, index) => {
                 const option = document.createElement('option');
                 option.value = index;
-                option.textContent = ${voice.name} (${voice.lang});
+                option.textContent = `${voice.name} (${voice.lang})`;
                 voiceSelect.appendChild(option);
             });
         }
 
-        // Trigger the voice loading after an interaction (important for mobile devices)
+        // Load voices on page load
         document.addEventListener("DOMContentLoaded", () => {
-            // Ensure voices are loaded after the user interaction
-            document.getElementById('textToSpeak').focus();
-            loadVoices(); // Explicitly load voices
+            loadVoices();
+            setTimeout(() => {
+                if (voices.length === 0) loadVoices();
+            }, 500);
         });
 
-        // Check if voices are loaded, otherwise retry
-        if (speechSynthesis.onvoiceschanged !== undefined) {
+        // Ensure voices load when available
+        if ('onvoiceschanged' in speechSynthesis) {
             speechSynthesis.onvoiceschanged = loadVoices;
-        } else {
-            loadVoices(); // If voices are already available
         }
 
-        // Split the text into manageable chunks
+        // Split text into chunks for better speech processing
         function splitTextIntoChunks(text, maxLength = 100) {
-            const sentences = text.split(/(?<=\.)\s+/); // Split by sentence (simplified)
+            const sentences = text.split(/(?<=\.)\s+/);
             let chunks = [];
             let currentChunk = "";
 
             sentences.forEach(sentence => {
                 if (currentChunk.length + sentence.length > maxLength) {
                     chunks.push(currentChunk);
-                    currentChunk = sentence; // Start a new chunk
+                    currentChunk = sentence;
                 } else {
-                    currentChunk += (currentChunk ? " " : "") + sentence; // Add to the current chunk
+                    currentChunk += (currentChunk ? " " : "") + sentence;
                 }
             });
 
             if (currentChunk.length > 0) {
-                chunks.push(currentChunk); // Add the last chunk
+                chunks.push(currentChunk);
             }
 
             return chunks;
         }
 
-        // Speak the text with selected voice and settings
+        // Speak the input text with selected voice and settings
         function speakText() {
             const text = document.getElementById("textToSpeak").value;
             const selectedVoiceIndex = document.getElementById("voiceSelect").value;
             const pitch = document.getElementById("pitchRange").value;
             const rate = document.getElementById("rateRange").value;
 
-            if (text !== "") {
-                const chunks = splitTextIntoChunks(text); // Split the text into smaller chunks
+            if (text !== "" && voices.length > 0) {
+                const chunks = splitTextIntoChunks(text);
 
-                // Create a function to speak chunks one by one
                 function speakChunks(chunks) {
                     if (chunks.length === 0) return;
 
-                    const chunk = chunks.shift(); // Get the next chunk
+                    const chunk = chunks.shift();
                     const speech = new SpeechSynthesisUtterance(chunk);
                     speech.voice = voices[selectedVoiceIndex];
-                    speech.pitch = pitch; // Custom pitch
-                    speech.rate = rate; // Custom rate
-                    speech.lang = voices[selectedVoiceIndex].lang; // Use the selected voice's language
+                    speech.pitch = pitch;
+                    speech.rate = rate;
+                    speech.lang = voices[selectedVoiceIndex].lang;
 
-                    // Speak the current chunk
                     speechSynthesis.speak(speech);
 
-                    // Call this function again once the current chunk finishes
                     speech.onend = () => speakChunks(chunks);
                 }
 
-                // Start speaking chunks
                 speakChunks(chunks);
-
-                // Set a timeout to stop the speaking after 3 minutes (180 seconds)
-                clearTimeout(speakingTimeout); // Clear any previous timeout
-                speakingTimeout = setTimeout(() => {
-                    console.log("Stopping speech after 3 minutes.");
-                    window.speechSynthesis.cancel(); // Stop the speech after 3 minutes
-                    alert("Speech session has ended (3 minutes).");
-                }, 180000); // 180000 ms = 3 minutes
             } else {
-                alert("Please enter some text to speak!");
+                alert("Please enter some text and ensure voices are loaded.");
             }
         }
     </script>
 
-    <!-- Bootstrap 5 JS (for responsiveness) -->
+    <!-- Bootstrap 5 JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Structured Data for Installability -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Text-to-Speech App",
+        "url": "https://brigli-the-coder.github.io/speech/",
+        "operatingSystem": "All",
+        "applicationCategory": "Utility",
+        "browserRequirements": "Requires JavaScript"
+    }
+    </script>
 </body>
 </html>
