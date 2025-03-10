@@ -1,16 +1,19 @@
 {
-  "name": "Text-to-Speech with Custom Voices",
-  "short_name": "TTS Voices",
-  "description": "Convert text to speech with customizable voices.",
-  "start_url": "/speech/",
-  "display": "standalone",
   "background_color": "#ffffff",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "Text-to-Speech with Custom Voices",
+  "orientation": "any",
+  "scope": "/speech",
+  "short_name": "TTS Voices",
+  "start_url": "/speech/",
   "theme_color": "#4f08a5",
   "icons": [
     {
-      "src": "/speech/path/to/icon.png",
-      "sizes": "192x192",
-      "type": "image/png"
+      "src": "https://raw.githubusercontent.com/Brigli-Bushati/Fundamentals3/main/letter-b-logo-design-for-business-and-company-identity-with-luxury-concept-free-vector.png", 
+      "type": "image/png",
+      "sizes": "512x512"
     }
-  ]
+  ],
+  "description": "Convert text into speech with customizable voices"
 }
